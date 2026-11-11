@@ -1,255 +1,627 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Simple EHR on Azure</title>
+
 <style>
 * {
-box-sizing: border-box;
+    box-sizing: border-box;
 }
+
 body {
-margin: 0;
-padding: 24px;
-font-family: Arial, sans-serif;
-background: #eef4f8;
-color: #203447;
+    margin: 0;
+    padding: 24px;
+    font-family: Arial, sans-serif;
+    background: #eef4f8;
+    color: #203447;
 }
+
 main {
-max-width: 900px;
-margin: auto;
-padding: 28px;
-background: white;
-border-radius: 12px;
-box-shadow: 0 4px 18px #00000012;
+    max-width: 1000px;
+    margin: auto;
+    padding: 28px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px #00000012;
 }
+
 h1 {
-margin-top: 0;
-color: #146b83;
+    margin-top: 0;
+    color: #146b83;
 }
+
+h2 {
+    color: #146b83;
+    margin-top: 28px;
+}
+
 .description {
-line-height: 1.6;
-color: #526575;
+    line-height: 1.6;
+    color: #526575;
 }
+
+#versionLabel {
+    display: inline-block;
+    padding: 7px 13px;
+    background: #e7f2f6;
+    color: #146b83;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
 label {
-display: block;
-margin-top: 16px;
-font-weight: bold;
+    display: block;
+    margin-top: 16px;
+    font-weight: bold;
 }
+
 input, textarea {
-width: 100%;
-margin-top: 7px;
-padding: 11px;
-border: 1px solid #aab8c2;
-border-radius: 6px;
-font: inherit;
+    width: 100%;
+    margin-top: 7px;
+    padding: 11px;
+    border: 1px solid #aab8c2;
+    border-radius: 6px;
+    font: inherit;
 }
+
 input:focus, textarea:focus {
-outline: 2px solid #146b83;
-outline-offset: 2px;
+    outline: 2px solid #146b83;
+    outline-offset: 2px;
 }
+
 button {
-margin-top: 18px;
-padding: 12px 20px;
-border: none;
-border-radius: 6px;
-background: #146b83;
-color: white;
-font: inherit;
-cursor: pointer;
+    margin-top: 12px;
+    padding: 11px 17px;
+    border: none;
+    border-radius: 6px;
+    background: #146b83;
+    color: white;
+    font: inherit;
+    cursor: pointer;
 }
+
 button:hover {
-background: #0e5063;
+    opacity: 0.88;
 }
+
+.delete-btn {
+    background: #c0392b;
+    margin: 0;
+}
+
 #message {
-min-height: 24px;
-color: #146b83;
+    min-height: 24px;
+    color: #146b83;
+    font-weight: bold;
 }
+
+#recordCount {
+    padding: 12px;
+    background: #e7f2f6;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
 .table-container {
-overflow-x: auto;
+    overflow-x: auto;
 }
+
 table {
-width: 100%;
-margin-top: 16px;
-border-collapse: collapse;
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
 }
+
 th, td {
-padding: 12px;
-border: 1px solid #ccd7df;
-text-align: left;
-overflow-wrap: anywhere;
-white-space: pre-wrap;
+    padding: 12px;
+    border: 1px solid #ccd7df;
+    text-align: left;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
+
 th {
-background: #e7f2f6;
+    background: #e7f2f6;
 }
+
 footer {
-margin-top: 24px;
-font-size: 14px;
-color: #526575;
+    margin-top: 24px;
+    font-size: 14px;
+    color: #526575;
 }
+
 @media (max-width: 600px) {
-body {
-padding: 12px;
-}
-main {
-padding: 18px;
-}
-h1 {
-font-size: 26px;
-}
+    body {
+        padding: 12px;
+    }
+
+    main {
+        padding: 18px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
 }
 </style>
 </head>
+
 <body>
+
 <main>
-<h1>Electronic Health Record</h1>
-<p class="description">
-A simple EHR demonstration hosted on Microsoft Azure.
-Use fictional patient information only.
-</p>
-<h2>Patient Entry Form</h2>
-<form id="patientForm">
-<label for="patientId">Patient ID</label>
-<input
-id="patientId"
-placeholder="Example: P001"
-maxlength="30"
-required
->
-<label for="patientName">Patient Name</label>
-<input
-id="patientName"
-placeholder="Example: Demo Patient"
-maxlength="100"
-required
->
-<label for="age">Age in years</label>
-<input
-id="age"
-type="number"
-min="0"
-max="120"
-step="1"
-required
->
-<label for="notes">Clinical Notes</label>
-<textarea
-id="notes"
-rows="3"
-placeholder="Enter sample clinical notes"
-maxlength="500"
-required
-></textarea>
-<button type="submit">Add Patient Record</button>
-</form>
-<p id="message" role="status"></p>
-<h2>Patient Records</h2>
-<p>
-These records are temporary and disappear when
-the page is refreshed.
-</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>Patient ID</th>
-<th>Name</th>
-<th>Age</th>
-<th>Clinical Notes</th>
-</tr>
-</thead>
-<tbody id="records"></tbody>
-</table>
-</div>
-<footer>
-Educational EHR demonstration | Microsoft Azure
-</footer>
+
+    <h1>Electronic Health Record</h1>
+
+    <p id="versionLabel">EHR Version 2</p>
+
+    <p class="description">
+        A simple EHR demonstration hosted on Microsoft Azure.
+        Use fictional patient information only.
+    </p>
+
+    <!-- PATIENT ENTRY FORM -->
+
+    <h2>Patient Entry Form</h2>
+
+    <form id="patientForm">
+
+        <label for="patientId">Patient ID</label>
+
+        <input
+            id="patientId"
+            placeholder="Example: P001"
+            maxlength="30"
+            required
+        >
+
+        <label for="patientName">Patient Name</label>
+
+        <input
+            id="patientName"
+            placeholder="Example: Anne-Marie"
+            maxlength="100"
+            required
+        >
+
+        <label for="age">Age in years</label>
+
+        <input
+            id="age"
+            type="number"
+            min="0"
+            max="120"
+            step="1"
+            required
+        >
+
+        <label for="notes">Clinical Notes</label>
+
+        <textarea
+            id="notes"
+            rows="3"
+            placeholder="Enter sample clinical notes"
+            maxlength="500"
+            required
+        ></textarea>
+
+        <button type="submit">
+            Add Patient Record
+        </button>
+
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+
+    <!-- SEARCH -->
+
+    <h2>Search Patient Records</h2>
+
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by Patient ID or Name"
+    >
+
+    <!-- RECORD COUNTS -->
+
+    <p id="recordCount">
+        Total records: 0 | Matching records: 0
+    </p>
+
+    <!-- PATIENT TABLE -->
+
+    <h2>Patient Records</h2>
+
+    <p>
+        Patient records are saved in browser localStorage.
+    </p>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Clinical Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="records"></tbody>
+
+        </table>
+
+    </div>
+
+    <footer>
+        Educational EHR demonstration | Microsoft Azure
+    </footer>
+
 </main>
+
 <script>
 
+// ======================================
+// ELEMENT REFERENCES
+// ======================================
+
 const form = document.getElementById("patientForm");
+
 const records = document.getElementById("records");
+
 const message = document.getElementById("message");
 
-// Load saved patient records
+const searchInput = document.getElementById("searchInput");
+
+const recordCount = document.getElementById("recordCount");
+
+const STORAGE_KEY = "patientRecords";
+
+
+// ======================================
+// UNIQUE RECORD IDENTIFIER
+// ======================================
+
+function generateId() {
+
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2);
+
+}
+
+
+// ======================================
+// LOAD RECORDS FROM LOCALSTORAGE
+// ======================================
+
 let patientRecords = [];
 
 try {
-    patientRecords = JSON.parse(
-        localStorage.getItem("patientRecords") || "[]"
+
+    const saved = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
     );
 
-    if (!Array.isArray(patientRecords)) {
-        patientRecords = [];
-    }
-} catch (error) {
-    patientRecords = [];
-}
+    if (Array.isArray(saved)) {
 
-// Normalize patient IDs
-function normalizePatientId(id) {
-    return id.trim().toUpperCase();
-}
+        patientRecords = saved.map(function(patient) {
 
-// Display patient records
-function displayRecords() {
-    records.innerHTML = "";
+            // Convert records from earlier assignments
 
-    patientRecords.forEach(function (patient) {
-        const row = document.createElement("tr");
+            if (Array.isArray(patient)) {
 
-        patient.forEach(function (value) {
-            const cell = document.createElement("td");
-            cell.textContent = value;
-            row.appendChild(cell);
+                return {
+                    id: generateId(),
+                    patientId: String(patient[0] || ""),
+                    patientName: String(patient[1] || ""),
+                    age: String(patient[2] || ""),
+                    notes: String(patient[3] || "")
+                };
+
+            }
+
+            return {
+                id: patient.id || generateId(),
+                patientId: String(patient.patientId || ""),
+                patientName: String(patient.patientName || ""),
+                age: String(patient.age ?? ""),
+                notes: String(patient.notes || "")
+            };
+
         });
 
-        records.appendChild(row);
-    });
+    }
+
+} catch (error) {
+
+    patientRecords = [];
+
 }
 
-// Save records to localStorage
+
+// ======================================
+// SAVE RECORDS
+// ======================================
+
 function saveRecords() {
-    localStorage.setItem(
-        "patientRecords",
-        JSON.stringify(patientRecords)
-    );
+
+    try {
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(patientRecords)
+        );
+
+        return true;
+
+    } catch (error) {
+
+        message.textContent =
+            "Unable to save records in browser storage.";
+
+        return false;
+
+    }
+
 }
 
-// Display saved records when the page loads
-displayRecords();
 
-// Handle form submission
-form.addEventListener("submit", function (event) {
+// ======================================
+// NORMALIZE PATIENT ID
+// ======================================
+
+function normalizePatientId(id) {
+
+    return id.trim().toUpperCase();
+
+}
+
+
+// ======================================
+// DISPLAY RECORDS
+// ======================================
+
+function displayRecords() {
+
+    records.innerHTML = "";
+
+    const searchTerm = searchInput.value
+        .trim()
+        .toLowerCase();
+
+    // Search by patient ID or patient name
+
+    const filteredRecords = patientRecords.filter(
+        function(patient) {
+
+            return (
+                patient.patientId.toLowerCase()
+                    .includes(searchTerm) ||
+
+                patient.patientName.toLowerCase()
+                    .includes(searchTerm)
+            );
+
+        }
+    );
+
+
+    // Display matching patients
+
+    filteredRecords.forEach(function(patient) {
+
+        const row = document.createElement("tr");
+
+        const values = [
+            patient.patientId,
+            patient.patientName,
+            patient.age,
+            patient.notes
+        ];
+
+        values.forEach(function(value) {
+
+            const cell = document.createElement("td");
+
+            // IMPORTANT:
+            // Display user-entered information as plain text.
+
+            cell.textContent = value;
+
+            row.appendChild(cell);
+
+        });
+
+
+        // DELETE BUTTON
+
+        const actionCell = document.createElement("td");
+
+        const deleteButton = document.createElement("button");
+
+        deleteButton.textContent = "Delete";
+
+        deleteButton.className = "delete-btn";
+
+        deleteButton.addEventListener("click", function() {
+
+            deletePatient(patient.id);
+
+        });
+
+        actionCell.appendChild(deleteButton);
+
+        row.appendChild(actionCell);
+
+        records.appendChild(row);
+
+    });
+
+
+    // UPDATE RECORD COUNTS
+
+    recordCount.textContent =
+        "Total records: " + patientRecords.length +
+        " | Matching records: " + filteredRecords.length;
+
+}
+
+
+// ======================================
+// DELETE PATIENT
+// ======================================
+
+function deletePatient(recordId) {
+
+    const patient = patientRecords.find(
+        function(item) {
+
+            return item.id === recordId;
+
+        }
+    );
+
+    if (!patient) {
+
+        message.textContent = "Patient record not found.";
+
+        return;
+
+    }
+
+
+    // Ask for confirmation
+
+    const confirmed = confirm(
+        "Are you sure you want to delete patient " +
+        patient.patientId + "?"
+    );
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    // Keep all records except the selected unique ID
+
+    const updatedRecords = patientRecords.filter(
+        function(item) {
+
+            return item.id !== recordId;
+
+        }
+    );
+
+
+    // Save before updating the displayed array
+
+    const previousRecords = patientRecords;
+
+    patientRecords = updatedRecords;
+
+    if (!saveRecords()) {
+
+        patientRecords = previousRecords;
+
+        displayRecords();
+
+        return;
+
+    }
+
+
+    displayRecords();
+
+    message.textContent =
+        "Patient " + patient.patientId +
+        " deleted successfully.";
+
+}
+
+
+// ======================================
+// SEARCH EVENT
+// ======================================
+
+searchInput.addEventListener("input", function() {
+
+    displayRecords();
+
+});
+
+
+// ======================================
+// FORM SUBMISSION
+// ======================================
+
+form.addEventListener("submit", function(event) {
+
     event.preventDefault();
 
+
+    // Get form values
+
     const patientId = document
-        .getElementById("patientId").value.trim();
+        .getElementById("patientId")
+        .value.trim();
 
     const patientName = document
-        .getElementById("patientName").value.trim();
+        .getElementById("patientName")
+        .value.trim();
 
-    const age = document.getElementById("age").value;
+    const age = document
+        .getElementById("age")
+        .value;
 
     const notes = document
-        .getElementById("notes").value.trim();
+        .getElementById("notes")
+        .value.trim();
 
-    // Check empty fields
-    if (!patientId || !patientName || !age || !notes) {
+
+    // VALIDATE REQUIRED FIELDS
+
+    if (
+        !patientId ||
+        !patientName ||
+        age === "" ||
+        !notes
+    ) {
+
         message.textContent =
             "Please complete every field.";
+
         return;
+
     }
 
-    // Validate patient name
+
+    // VALIDATE PATIENT NAME
+
     if (patientName.length < 1) {
+
         message.textContent =
             "Patient name cannot be empty.";
+
         return;
+
     }
 
-    // Validate age
+
+    // VALIDATE AGE
+
     const numericAge = Number(age);
 
     if (
@@ -257,50 +629,100 @@ form.addEventListener("submit", function (event) {
         numericAge < 0 ||
         numericAge > 120
     ) {
+
         message.textContent =
             "Please enter a valid age between 0 and 120.";
+
         return;
+
     }
 
-    // Check duplicate patient ID (case-insensitive)
+
+    // CHECK DUPLICATE PATIENT ID
+
     const normalizedId = normalizePatientId(patientId);
 
-    const duplicate = patientRecords.some(function (patient) {
-        return normalizePatientId(patient[0]) === normalizedId;
-    });
+    const duplicate = patientRecords.some(
+        function(patient) {
+
+            return normalizePatientId(patient.patientId)
+                === normalizedId;
+
+        }
+    );
 
     if (duplicate) {
+
         message.textContent =
             "Duplicate Patient ID! This patient already exists.";
+
         return;
+
     }
 
-    // Create new patient record
-    const newPatient = [
-        normalizedId,
-        patientName,
-        numericAge.toString(),
-        notes
-    ];
 
-    // Add record only after all validation succeeds
+    // CREATE NEW PATIENT RECORD
+
+    const newPatient = {
+
+        id: generateId(),
+
+        patientId: normalizedId,
+
+        patientName: patientName,
+
+        age: numericAge,
+
+        notes: notes
+
+    };
+
+
+    // ADD RECORD
+
     patientRecords.push(newPatient);
 
-    // Save records
-    saveRecords();
 
-    // Update table
+    // SAVE RECORD
+
+    if (!saveRecords()) {
+
+        patientRecords.pop();
+
+        return;
+
+    }
+
+
+    // CLEAR SEARCH AND REFRESH TABLE
+
+    searchInput.value = "";
+
     displayRecords();
+
+
+    // SUCCESS MESSAGE
 
     message.textContent =
         "Patient record added successfully!";
 
-    // Reset form after successful submission only
+
+    // RESET FORM
+
     form.reset();
 
     document.getElementById("patientId").focus();
+
 });
 
+
+// ======================================
+// INITIAL PAGE DISPLAY
+// ======================================
+
+displayRecords();
+
 </script>
+
 </body>
 </html>
