@@ -172,12 +172,27 @@ const form = document.getElementById("patientForm");
 const records = document.getElementById("records");
 const message = document.getElementById("message");
 
-// Load saved records from localStorage
-let patientRecords = JSON.parse(
-    localStorage.getItem("patientRecords") || "[]"
-);
+// Load saved patient records
+let patientRecords = [];
 
-// Display records in the table
+try {
+    patientRecords = JSON.parse(
+        localStorage.getItem("patientRecords") || "[]"
+    );
+
+    if (!Array.isArray(patientRecords)) {
+        patientRecords = [];
+    }
+} catch (error) {
+    patientRecords = [];
+}
+
+// Normalize patient IDs
+function normalizePatientId(id) {
+    return id.trim().toUpperCase();
+}
+
+// Display patient records
 function displayRecords() {
     records.innerHTML = "";
 
@@ -202,59 +217,90 @@ function saveRecords() {
     );
 }
 
-// Display previously saved records when page loads
+// Display saved records when the page loads
 displayRecords();
 
 // Handle form submission
 form.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const values = [
-        document.getElementById("patientId").value.trim(),
-        document.getElementById("patientName").value.trim(),
-        document.getElementById("age").value,
-        document.getElementById("notes").value.trim()
-    ];
+    const patientId = document
+        .getElementById("patientId").value.trim();
 
-    // Validate fields
-    if (values.some(value => value === "")) {
-        message.textContent = "Please complete every field.";
+    const patientName = document
+        .getElementById("patientName").value.trim();
+
+    const age = document.getElementById("age").value;
+
+    const notes = document
+        .getElementById("notes").value.trim();
+
+    // Check empty fields
+    if (!patientId || !patientName || !age || !notes) {
+        message.textContent =
+            "Please complete every field.";
+        return;
+    }
+
+    // Validate patient name
+    if (patientName.length < 1) {
+        message.textContent =
+            "Patient name cannot be empty.";
         return;
     }
 
     // Validate age
-    const age = Number(values[2]);
+    const numericAge = Number(age);
 
-    if (!Number.isInteger(age) || age < 0 || age > 120) {
-        message.textContent = "Please enter a valid age (0-120).";
+    if (
+        !Number.isInteger(numericAge) ||
+        numericAge < 0 ||
+        numericAge > 120
+    ) {
+        message.textContent =
+            "Please enter a valid age between 0 and 120.";
         return;
     }
 
-    // Prevent duplicate patient IDs
-    const duplicate = patientRecords.some(
-        patient => patient[0] === values[0]
-    );
+    // Check duplicate patient ID (case-insensitive)
+    const normalizedId = normalizePatientId(patientId);
+
+    const duplicate = patientRecords.some(function (patient) {
+        return normalizePatientId(patient[0]) === normalizedId;
+    });
 
     if (duplicate) {
-        message.textContent = "Patient ID already exists.";
+        message.textContent =
+            "Duplicate Patient ID! This patient already exists.";
         return;
     }
 
-    // Add new patient record
-    patientRecords.push(values);
+    // Create new patient record
+    const newPatient = [
+        normalizedId,
+        patientName,
+        numericAge.toString(),
+        notes
+    ];
 
-    // Save to localStorage
+    // Add record only after all validation succeeds
+    patientRecords.push(newPatient);
+
+    // Save records
     saveRecords();
 
-    // Refresh table
+    // Update table
     displayRecords();
 
-    message.textContent = "Patient record saved successfully.";
+    message.textContent =
+        "Patient record added successfully!";
 
-    // Reset form
+    // Reset form after successful submission only
     form.reset();
+
     document.getElementById("patientId").focus();
 });
+
 </script>
 </body>
 </html>
