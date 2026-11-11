@@ -167,31 +167,93 @@ Educational EHR demonstration | Microsoft Azure
 </footer>
 </main>
 <script>
+
 const form = document.getElementById("patientForm");
 const records = document.getElementById("records");
 const message = document.getElementById("message");
-form.addEventListener("submit", function (event) {
-event.preventDefault();
-const values = [
-document.getElementById("patientId").value.trim(),
-document.getElementById("patientName").value.trim(),
-document.getElementById("age").value,
-document.getElementById("notes").value.trim()
-];
-if (values.some(value => value === "")) {
-message.textContent = "Please complete every field.";
-return;
+
+// Load saved records from localStorage
+let patientRecords = JSON.parse(
+    localStorage.getItem("patientRecords") || "[]"
+);
+
+// Display records in the table
+function displayRecords() {
+    records.innerHTML = "";
+
+    patientRecords.forEach(function (patient) {
+        const row = document.createElement("tr");
+
+        patient.forEach(function (value) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+
+        records.appendChild(row);
+    });
 }
-const row = document.createElement("tr");
-values.forEach(function (value) {
-const cell = document.createElement("td");
-cell.textContent = value;
-row.appendChild(cell);
-});
-records.appendChild(row);
-message.textContent = "Patient record added successfully.";
-form.reset();
-document.getElementById("patientId").focus();
+
+// Save records to localStorage
+function saveRecords() {
+    localStorage.setItem(
+        "patientRecords",
+        JSON.stringify(patientRecords)
+    );
+}
+
+// Display previously saved records when page loads
+displayRecords();
+
+// Handle form submission
+form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const values = [
+        document.getElementById("patientId").value.trim(),
+        document.getElementById("patientName").value.trim(),
+        document.getElementById("age").value,
+        document.getElementById("notes").value.trim()
+    ];
+
+    // Validate fields
+    if (values.some(value => value === "")) {
+        message.textContent = "Please complete every field.";
+        return;
+    }
+
+    // Validate age
+    const age = Number(values[2]);
+
+    if (!Number.isInteger(age) || age < 0 || age > 120) {
+        message.textContent = "Please enter a valid age (0-120).";
+        return;
+    }
+
+    // Prevent duplicate patient IDs
+    const duplicate = patientRecords.some(
+        patient => patient[0] === values[0]
+    );
+
+    if (duplicate) {
+        message.textContent = "Patient ID already exists.";
+        return;
+    }
+
+    // Add new patient record
+    patientRecords.push(values);
+
+    // Save to localStorage
+    saveRecords();
+
+    // Refresh table
+    displayRecords();
+
+    message.textContent = "Patient record saved successfully.";
+
+    // Reset form
+    form.reset();
+    document.getElementById("patientId").focus();
 });
 </script>
 </body>
